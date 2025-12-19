@@ -1,24 +1,15 @@
 import dotenv from "dotenv";
 import type { Address, Chain, Hex } from "viem";
-
-import { chainConfigs } from "./config";
+import { chains } from "./config";
 import type { ChainConfig } from "./types";
 
 dotenv.config();
 
-export function chainConfig(chainId: number): ChainConfig {
-  const config = chainConfigs[chainId];
-  if (!config) {
-    throw new Error(`No config found for chainId ${chainId}`);
-  }
-
-  const { rpcUrl, vaultWhitelist, reallocatorPrivateKey, executionInterval } = getSecrets(
-    chainId,
-    config.chain,
-  );
+export function chainConfig(chain: Chain): ChainConfig {
+  const { rpcUrl, vaultWhitelist, reallocatorPrivateKey, executionInterval } = getSecrets(chain);
   return {
-    ...config,
-    chainId,
+    chain,
+    chainId: chain.id,
     rpcUrl,
     reallocatorPrivateKey,
     vaultWhitelist,
@@ -26,7 +17,8 @@ export function chainConfig(chainId: number): ChainConfig {
   };
 }
 
-export function getSecrets(chainId: number, chain?: Chain) {
+export function getSecrets(chain: Chain) {
+  const chainId = chain.id;
   const defaultRpcUrl = chain?.rpcUrls.default.http[0];
 
   const rpcUrl = process.env[`RPC_URL_${chainId}`] ?? defaultRpcUrl;
@@ -54,5 +46,5 @@ export function getSecrets(chainId: number, chain?: Chain) {
   };
 }
 
-export { chainConfigs, type ChainConfig };
+export { type ChainConfig, chains };
 export * from "./strategies";

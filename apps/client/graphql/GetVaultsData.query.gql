@@ -1,0 +1,36 @@
+query getVaultsData($chainId: Int!, $addresses: [String!]!) {
+  vaults(first: 1000, where: { chainId_in: [$chainId], address_in: $addresses }) {
+    items {
+      address
+      state {
+        allocation {
+          market {
+            uniqueKey
+            collateralAsset {
+              address
+            }
+            loanAsset {
+              address
+            }
+            oracle {
+              address
+            }
+            irmAddress
+            lltv
+            state {
+              supplyAssets
+              supplyShares
+              borrowAssets
+              borrowShares
+              rateAtTarget
+              fee
+              timestamp
+            }
+          }
+          supplyAssets
+          supplyCap
+        }
+      }
+    }
+  }
+}
