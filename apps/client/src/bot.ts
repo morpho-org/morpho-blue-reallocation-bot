@@ -19,23 +19,26 @@ export class ReallocationBot {
   private client: Client<Transport, Chain, Account>;
   private vaultWhitelist: Address[];
   private strategy: Strategy;
+  private morphoApiKey: string;
   constructor(
     chainId: number,
     client: Client<Transport, Chain, Account>,
     vaultWhitelist: Address[],
     strategy: Strategy,
+    morphoApiKey: string,
   ) {
     this.chainId = chainId;
     this.client = client;
     this.vaultWhitelist = vaultWhitelist;
     this.strategy = strategy;
+    this.morphoApiKey = morphoApiKey;
   }
 
   async run() {
     console.log(`Running bot on chain ${this.chainId.toString()}`);
 
     const { client } = this;
-    const vaultsData = await fetchVaultData(this.chainId, this.vaultWhitelist);
+    const vaultsData = await fetchVaultData(this.chainId, this.vaultWhitelist, this.morphoApiKey);
 
     await Promise.all(
       vaultsData.map(async (vaultData) => {

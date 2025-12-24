@@ -17,7 +17,13 @@ export const launchBot = (config: ChainConfig) => {
   console.log(`Client created: ${client.account.address}`);
   console.log(`Strategy created`);
 
-  const bot = new ReallocationBot(config.chainId, client, config.vaultWhitelist, strategy);
+  const bot = new ReallocationBot(
+    config.chainId,
+    client,
+    config.vaultWhitelist,
+    strategy,
+    config.morphoApiKey,
+  );
 
   // Run on startup.
   void bot.run();

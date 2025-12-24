@@ -7,4 +7,5 @@ export interface ChainConfig {
   vaultWhitelist: Address[];
   reallocatorPrivateKey: Hex;
   executionInterval: number;
+  morphoApiKey: string;
 }

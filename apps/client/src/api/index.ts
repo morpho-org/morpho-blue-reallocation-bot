@@ -1,14 +1,35 @@
+import type { InputMaybe, OrderDirection } from "@morpho-org/blue-api-sdk";
 import { GraphQLClient } from "graphql-request";
 
-import type { InputMaybe, OrderDirection } from "@morpho-org/blue-api-sdk";
 import { getSdk } from "./sdk.js";
 
 export * from "./sdk.js";
 export * from "./types.js";
 
-const BLUE_API_GRAPHQL_URL = "https://api.morpho.org/graphql";
+const BLUE_PRIVATE_API_GRAPHQL_URL = "https://private.blue-api.morpho.org/graphql";
+const BLUE_PUBLIC_API_GRAPHQL_URL = "https://api.morpho.org/graphql";
 
-export const apiSdk: ReturnType<typeof getSdk> = getSdk(new GraphQLClient(BLUE_API_GRAPHQL_URL));
+/**
+ * Creates and returns a Blue API SDK client.
+ * @param apiKey Optional API key for private Morph API access. If provided, an 'Authorization' header will be set and the private API endpoint will be used.
+ */
+export function createApiSdk(apiKey?: string): ReturnType<typeof getSdk> {
+  const isPrivate = Boolean(apiKey);
+  const url = isPrivate ? BLUE_PRIVATE_API_GRAPHQL_URL : BLUE_PUBLIC_API_GRAPHQL_URL;
+  const options: ConstructorParameters<typeof GraphQLClient>[1] = isPrivate
+    ? {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: apiKey ?? "",
+        },
+      }
+    : undefined;
+
+  return getSdk(new GraphQLClient(url, options));
+}
+
+// For convenience: default export (no API key)
+export const apiSdk: ReturnType<typeof getSdk> = createApiSdk();
 
 type QueryVariables = Record<string, unknown>;
 
@@ -30,7 +51,7 @@ export interface PageResult<T> {
   pageInfo: PageInfo | null;
 }
 
-export async function paginatedQuery<T, V extends QueryVariables = {}>(
+export async function paginatedQuery<T, V extends QueryVariables = Record<string, never>>(
   fetchPage: (vars: PaginationVariables<V>) => Promise<PageResult<T>>,
   {
     pageSize,
@@ -84,7 +105,7 @@ export async function paginatedQuery<T, V extends QueryVariables = {}>(
     const { items } = page;
     const pageNum = idx + 2; // human-friendly page number
     if (items == null) {
-      console.warn(`paginateGraphQLConcurrent: received null items on page ${pageNum}`);
+      console.warn(`paginateGraphQLConcurrent: received null items on page ${String(pageNum)}`);
     } else {
       allItems.push(...items);
     }
