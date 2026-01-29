@@ -1,14 +1,12 @@
 # Morpho Blue Reallocation Bot
 
-A simple, fast, and easily deployable reallocation bot for the **Morpho Blue** protocol. This bot is entirely based on **RPC calls** and is designed to
-meet borrow demand within MetaMorpho vaults by equalizing utilization rates across markets.
+A simple, fast, and easily deployable reallocation bot for the **Morpho Blue** protocol. This bot is entirely based on **RPC calls and the Morpho API** and is designed to automate Morpho vaultsV1 reallocations according customable strategies.
 
 ## Features
 
 - Automatically rebalances assets within MetaMorpho vaults to maintain capital efficiency
 - Equalizes utilization rates across markets
 - Multi-chain compatible (Ethereum, Base, and more)
-- Minimal setup and dependencies (RPC-only, no extra infra required)
 - Configurable minimum threshold for utilization changes (2.5% by default)
 
 ### ⚠️ Disclaimer
@@ -21,7 +19,6 @@ Use at your own risk.
 
 - Node.js >= 20
 - [pnpm](https://pnpm.io/) (this repo uses `pnpm` as package manager)
-- [Docker](https://www.docker.com/) (optional, only needed if you want to run the database locally)
 - A valid RPC URL (via Alchemy, Infura, etc)
 - The private key of an EOA with enough funds to pay for gas
 
@@ -35,26 +32,7 @@ pnpm install
 
 ## Chain Configuration
 
-The bot can be configured to run on any EVM-compatible chain where the Morpho stack has been deployed. The chain configuration is done in the `apps/config/config.ts` file.
-
-### Morpho Stack parameters (addresses and start blocks)
-
-**If you don't plan on supporting a new chain, you can ignore this section.**
-
-Morpho Blue:
-
-- `morpho.address`: The address of the Morpho contract.
-- `morpho.startBlock`: The block number of the Morpho contract deployment.
-
-Adaptive Curve IRM:
-
-- `adaptiveCurveIrm.address`: The address of the Adaptive Curve IRM contract.
-- `adaptiveCurveIrm.startBlock`: The block number of the Adaptive Curve IRM contract deployment.
-
-Meta Morpho Factories:
-
-- `metaMorphoFactories.addresses`: The addresses of the MetaMorpho factories.
-- `metaMorphoFactories.startBlock`: The block number of the oldest MetaMorpho factory deployment.
+The bot can be configured to run on any EVM-compatible chain where the Morpho stack has been deployed and supported by the Morpho API. The chain configuration is done in the `apps/config/config.ts` file. Just fill the array with the chains where you want the bot to run.
 
 ### Secrets
 
@@ -122,14 +100,4 @@ Once the bot is installed and configured, you can run it by executing the follow
 pnpm reallocate
 ```
 
-This command will start the bot, which will start reallocating once the configured chains are fully indexed.
-
-⚠⏱️ The indexing process can take some time depending on the number of blocks to index.
-
-## Config Changes
-
-Unfortunately, Ponder doesn't allow the same schema to be used with different configs.
-In this project, the config changes only if you add, remove, or modify a chain.
-
-So, if you try to run the bot with a set of chains that's different from the one used in your initial run, indexing will fail.
-You should use another schema (this handled in `apps/client/src/script.ts`).
+This command will start the bot.

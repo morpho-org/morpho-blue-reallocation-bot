@@ -1,5 +1,5 @@
 import nock from "nock";
-import { Hex, maxUint256, parseUnits } from "viem";
+import { maxUint256, parseUnits } from "viem";
 import { describe, expect } from "vitest";
 import { EquilizeUtilizations } from "../../../src/strategies/equilizeUtilizations/index.js";
 import { readContract, writeContract } from "viem/actions";
@@ -8,6 +8,7 @@ import { morphoBlueAbi } from "../../abis/MorphoBlue.js";
 import { metaMorphoAbi } from "../../../abis/MetaMorpho.js";
 import { ReallocationBot } from "../../../src/bot.js";
 import { test } from "../../setup.js";
+import type { GetVaultsDataQuery } from "../../../src/api/types.js";
 import {
   setupVault,
   marketParams1,
@@ -88,58 +89,113 @@ describe("should test the reallocation execution", () => {
     // first market is at 100% utilization
     expect(marketState1[2]).toBe(marketState1[0]);
 
-    const apiResponse = [
-      {
-        chainId: 1,
-        id: marketId1 as Hex,
-        params: marketParams1,
-        state: {
-          totalSupplyAssets: marketState1[0],
-          totalSupplyShares: marketState1[1],
-          totalBorrowAssets: marketState1[2],
-          totalBorrowShares: marketState1[3],
-          lastUpdate: marketState1[4],
-          fee: marketState1[5],
-        },
-        cap: caps,
-        vaultAssets: suppliedAmount,
-        rateAtTarget: 0n, // unused for the equilizeUtilizations strategy
+    // Mock GraphQL response matching GetVaultsDataQuery type
+    const apiResponse = {
+      vaults: {
+        items: [
+          {
+            address: vault,
+            state: {
+              allocation: [
+                {
+                  market: {
+                    uniqueKey: marketId1,
+                    collateralAsset: {
+                      address: marketParams1.collateralToken,
+                    },
+                    loanAsset: {
+                      address: marketParams1.loanToken,
+                    },
+                    oracle: {
+                      address: marketParams1.oracle,
+                    },
+                    irmAddress: marketParams1.irm,
+                    lltv: marketParams1.lltv.toString(),
+                    state: {
+                      supplyAssets: marketState1[0].toString(),
+                      supplyShares: marketState1[1].toString(),
+                      borrowAssets: marketState1[2].toString(),
+                      borrowShares: marketState1[3].toString(),
+                      rateAtTarget: "0",
+                      fee: Number(marketState1[5]),
+                      timestamp: marketState1[4].toString(),
+                    },
+                  },
+                  supplyAssets: suppliedAmount.toString(),
+                  supplyCap: caps.toString(),
+                },
+                {
+                  market: {
+                    uniqueKey: marketId2,
+                    collateralAsset: {
+                      address: marketParams2.collateralToken,
+                    },
+                    loanAsset: {
+                      address: marketParams2.loanToken,
+                    },
+                    oracle: {
+                      address: marketParams2.oracle,
+                    },
+                    irmAddress: marketParams2.irm,
+                    lltv: marketParams2.lltv.toString(),
+                    state: {
+                      supplyAssets: marketState2[0].toString(),
+                      supplyShares: marketState2[1].toString(),
+                      borrowAssets: marketState2[2].toString(),
+                      borrowShares: marketState2[3].toString(),
+                      rateAtTarget: "0",
+                      fee: Number(marketState2[5]),
+                      timestamp: marketState2[4].toString(),
+                    },
+                  },
+                  supplyAssets: suppliedAmount.toString(),
+                  supplyCap: caps.toString(),
+                },
+                {
+                  market: {
+                    uniqueKey: marketId3,
+                    collateralAsset: {
+                      address: marketParams3.collateralToken,
+                    },
+                    loanAsset: {
+                      address: marketParams3.loanToken,
+                    },
+                    oracle: {
+                      address: marketParams3.oracle,
+                    },
+                    irmAddress: marketParams3.irm,
+                    lltv: marketParams3.lltv.toString(),
+                    state: {
+                      supplyAssets: marketState3[0].toString(),
+                      supplyShares: marketState3[1].toString(),
+                      borrowAssets: marketState3[2].toString(),
+                      borrowShares: marketState3[3].toString(),
+                      rateAtTarget: "0",
+                      fee: Number(marketState3[5]),
+                      timestamp: marketState3[4].toString(),
+                    },
+                  },
+                  supplyAssets: suppliedAmount.toString(),
+                  supplyCap: caps.toString(),
+                },
+              ],
+            },
+          },
+        ],
       },
-      {
-        chainId: 1,
-        id: marketId2 as Hex,
-        params: marketParams2,
-        state: {
-          totalSupplyAssets: marketState2[0],
-          totalSupplyShares: marketState2[1],
-          totalBorrowAssets: marketState2[2],
-          totalBorrowShares: marketState2[3],
-          lastUpdate: marketState2[4],
-          fee: marketState2[5],
-        },
-        cap: caps,
-        vaultAssets: suppliedAmount,
-        rateAtTarget: 0n, // unused for the equilizeUtilizations strategy
-      },
-      {
-        chainId: 1,
-        id: marketId3 as Hex,
-        params: marketParams3,
-        state: {
-          totalSupplyAssets: marketState3[0],
-          totalSupplyShares: marketState3[1],
-          totalBorrowAssets: marketState3[2],
-          totalBorrowShares: marketState3[3],
-          lastUpdate: marketState3[4],
-          fee: marketState3[5],
-        },
-        cap: caps,
-        vaultAssets: suppliedAmount,
-        rateAtTarget: 0n, // unused for the equilizeUtilizations strategy
-      },
-    ];
+    } as unknown as GetVaultsDataQuery;
 
-    nock("http://localhost:42069").get(`/chain/1/vault/${vault}`).reply(200, apiResponse);
+    // Mock GraphQL POST request to Blue API
+    nock("https://api.morpho.org")
+      .post("/graphql", (body) => {
+        // Match the getVaultsData query
+        return (
+          body.query?.includes("getVaultsData") &&
+          body.variables?.chainId === 1 &&
+          body.variables?.addresses?.includes(vault)
+        );
+      })
+      .reply(200, { data: apiResponse });
 
     const bot = new ReallocationBot(1, client, [vault], strategy);
 
