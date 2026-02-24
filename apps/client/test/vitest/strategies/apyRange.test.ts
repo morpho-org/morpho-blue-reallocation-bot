@@ -3,9 +3,9 @@ import { Address, Hex, maxUint184, maxUint256, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { readContract, writeContract } from "viem/actions";
 import { test } from "../../setup.js";
-import { morphoBlueAbi } from "../../abis/MorphoBlue.js";
+import { morphoBlueAbi } from "../../../abis/MorphoBlue.js";
 import { metaMorphoAbi } from "../../../abis/MetaMorpho.js";
-import { adaptiveCurveIrmAbi } from "../../abis/AdaptiveCurveIrm.js";
+import { adaptiveCurveIrmAbi } from "../../../abis/AdaptiveCurveIrm.js";
 import { WBTC, MORPHO, IRM } from "../../constants.js";
 import { Range } from "@morpho-blue-reallocation-bot/config";
 import { rateToApy, getUtilization, percentToWad, WAD } from "../../../src/utils/maths.js";
@@ -243,18 +243,28 @@ describe("equilizeUtilizations strategy", () => {
       }),
     ]);
 
+    const toMarketStruct = (s: readonly [bigint, bigint, bigint, bigint, bigint, bigint]) =>
+      ({
+        totalSupplyAssets: s[0],
+        totalSupplyShares: s[1],
+        totalBorrowAssets: s[2],
+        totalBorrowShares: s[3],
+        lastUpdate: s[4],
+        fee: s[5],
+      }) as const;
+
     const [marketState1Rate, marketState2Rate] = await Promise.all([
       readContract(client, {
         address: IRM,
         abi: adaptiveCurveIrmAbi,
         functionName: "borrowRateView",
-        args: [marketParams1, formatMarketState(marketState1PostReallocation)],
+        args: [marketParams1, toMarketStruct(marketState1PostReallocation)],
       }),
       readContract(client, {
         address: IRM,
         abi: adaptiveCurveIrmAbi,
         functionName: "borrowRateView",
-        args: [marketParams2, formatMarketState(marketState2PostReallocation)],
+        args: [marketParams2, toMarketStruct(marketState2PostReallocation)],
       }),
     ]);
 

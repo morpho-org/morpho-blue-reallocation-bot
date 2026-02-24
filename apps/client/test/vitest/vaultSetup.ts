@@ -10,7 +10,7 @@ import {
   MIN_TIMELOCK,
 } from "../constants";
 import { getTransactionReceipt, writeContract } from "viem/actions";
-import { morphoBlueAbi } from "../abis/MorphoBlue";
+import { morphoBlueAbi } from "../../abis/MorphoBlue";
 import { metaMorphoFactoryAbi } from "../abis/MetaMorphoFactory";
 import { metaMorphoAbi } from "../../abis/MetaMorpho";
 import { vi } from "vitest";

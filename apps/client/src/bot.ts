@@ -32,7 +32,7 @@ export class ReallocationBot {
 
   async run() {
     const { client } = this;
-    const vaultsData = await fetchVaultData(this.chainId, this.vaultWhitelist);
+    const vaultsData = await fetchVaultData(this.client, this.vaultWhitelist);
 
     await Promise.all(
       vaultsData.map(async (vaultData) => {
