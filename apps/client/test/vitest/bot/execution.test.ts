@@ -1,11 +1,12 @@
 import { maxUint256, parseUnits } from "viem";
-import { describe, expect } from "vitest";
-import { EquilizeUtilizations } from "../../../src/strategies/equilizeUtilizations/index.js";
 import { readContract, writeContract } from "viem/actions";
-import { WBTC, MORPHO } from "../../constants.js";
-import { morphoBlueAbi } from "../../../abis/MorphoBlue.js";
+import { describe, expect } from "vitest";
+
 import { metaMorphoAbi } from "../../../abis/MetaMorpho.js";
+import { morphoBlueAbi } from "../../../abis/MorphoBlue.js";
 import { ReallocationBot } from "../../../src/bot.js";
+import { EquilizeUtilizations } from "../../../src/strategies/equilizeUtilizations/index.js";
+import { WBTC, MORPHO } from "../../constants.js";
 import { test } from "../../setup.js";
 import {
   setupVault,
@@ -13,8 +14,6 @@ import {
   marketParams2,
   marketParams3,
   marketId1,
-  marketId2,
-  marketId3,
   prepareBorrow,
   borrow,
 } from "../vaultSetup.js";
