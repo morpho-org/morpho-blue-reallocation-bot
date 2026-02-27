@@ -10,6 +10,7 @@ import { WBTC, MORPHO } from "../../constants.js";
 import { test } from "../../setup.js";
 import {
   setupVault,
+  syncTimestamp,
   marketParams1,
   marketParams2,
   marketParams3,
@@ -73,6 +74,8 @@ describe("should test the reallocation execution", () => {
 
     // first market is at 100% utilization
     expect(marketState1[2]).toBe(marketState1[0]);
+
+    await syncTimestamp(client);
 
     const bot = new ReallocationBot(1, client, [vault], strategy);
 

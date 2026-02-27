@@ -1,17 +1,8 @@
-import {
-  zeroAddress,
-  type Account,
-  type Address,
-  type Chain,
-  type Client,
-  type Hex,
-  type Transport,
-} from "viem";
+import { type Account, type Address, type Chain, type Client, type Hex, type Transport } from "viem";
 import { readContract } from "viem/actions";
-import { getChainAddresses } from "@morpho-org/blue-sdk";
+import { type MarketId } from "@morpho-org/blue-sdk";
+import { fetchMarket, fetchPosition } from "@morpho-org/blue-sdk-viem";
 
-import { morphoBlueAbi } from "../../abis/MorphoBlue.js";
-import { adaptiveCurveIrmAbi } from "../../abis/AdaptiveCurveIrm.js";
 import { metaMorphoAbi } from "../../abis/MetaMorpho.js";
 import { toAssetsDown } from "./maths.js";
 import type { VaultData, VaultMarketData } from "./types.js";
@@ -21,7 +12,6 @@ export async function fetchVaultData(
   vaultAddresses: Address[],
 ): Promise<VaultData[]> {
   const chainId = client.chain.id;
-  const { morpho, adaptiveCurveIrm } = getChainAddresses(chainId);
 
   return Promise.all(
     vaultAddresses.map(async (vaultAddress): Promise<VaultData> => {
@@ -44,28 +34,16 @@ export async function fetchVaultData(
         ),
       );
 
-      // 3. For each market, fetch all data in parallel
+      const now = BigInt(Math.floor(Date.now() / 1000));
+
+      // 3. For each market, fetch all data in parallel using blue-sdk-viem
       const marketsData = await Promise.all(
         marketIds.map(async (id): Promise<VaultMarketData> => {
-          const [params, marketState, position, config] = await Promise.all([
-            readContract(client, {
-              address: morpho,
-              abi: morphoBlueAbi,
-              functionName: "idToMarketParams",
-              args: [id],
-            }),
-            readContract(client, {
-              address: morpho,
-              abi: morphoBlueAbi,
-              functionName: "market",
-              args: [id],
-            }),
-            readContract(client, {
-              address: morpho,
-              abi: morphoBlueAbi,
-              functionName: "position",
-              args: [id, vaultAddress],
-            }),
+          const marketId = id as MarketId;
+
+          const [market, position, config] = await Promise.all([
+            fetchMarket(marketId, client, { chainId }),
+            fetchPosition(vaultAddress, marketId, client, { chainId }),
             readContract(client, {
               address: vaultAddress,
               abi: metaMorphoAbi,
@@ -74,52 +52,38 @@ export async function fetchVaultData(
             }),
           ]);
 
-          const [loanToken, collateralToken, oracle, irm, lltv] = params;
-          const [
-            totalSupplyAssets,
-            totalSupplyShares,
-            totalBorrowAssets,
-            totalBorrowShares,
-            lastUpdate,
-            fee,
-          ] = marketState;
-          const [supplyShares] = position;
+          // Accrue interest to get up-to-date market state
+          const accruedMarket = market.accrueInterest(now);
+
           const [cap] = config;
 
-          // 4. Fetch rateAtTarget for non-idle markets
-          let rateAtTarget = 0n;
-          if (irm !== zeroAddress) {
-            rateAtTarget = await readContract(client, {
-              address: adaptiveCurveIrm,
-              abi: adaptiveCurveIrmAbi,
-              functionName: "rateAtTarget",
-              args: [id],
-            });
-          }
-
-          const vaultAssets = toAssetsDown(supplyShares, totalSupplyAssets, totalSupplyShares);
+          const vaultAssets = toAssetsDown(
+            position.supplyShares,
+            accruedMarket.totalSupplyAssets,
+            accruedMarket.totalSupplyShares,
+          );
 
           return {
             chainId,
             id: id as Hex,
             params: {
-              loanToken,
-              collateralToken,
-              oracle,
-              irm,
-              lltv,
+              loanToken: accruedMarket.params.loanToken,
+              collateralToken: accruedMarket.params.collateralToken,
+              oracle: accruedMarket.params.oracle,
+              irm: accruedMarket.params.irm,
+              lltv: accruedMarket.params.lltv,
             },
             state: {
-              totalSupplyAssets,
-              totalSupplyShares,
-              totalBorrowAssets,
-              totalBorrowShares,
-              lastUpdate,
-              fee,
+              totalSupplyAssets: accruedMarket.totalSupplyAssets,
+              totalSupplyShares: accruedMarket.totalSupplyShares,
+              totalBorrowAssets: accruedMarket.totalBorrowAssets,
+              totalBorrowShares: accruedMarket.totalBorrowShares,
+              lastUpdate: accruedMarket.lastUpdate,
+              fee: accruedMarket.fee,
             },
             cap: BigInt(cap),
             vaultAssets,
-            rateAtTarget: BigInt(rateAtTarget),
+            rateAtTarget: accruedMarket.rateAtTarget ?? 0n,
           };
         }),
       );
