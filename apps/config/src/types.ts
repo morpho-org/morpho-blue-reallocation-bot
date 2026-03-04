@@ -1,5 +1,7 @@
 import type { Address, Chain, Hex } from "viem";
 
+export type StrategyName = "equilizeUtilizations" | "apyRange";
+
 export interface ChainConfig {
   chain: Chain;
   chainId: number;
@@ -7,4 +9,5 @@ export interface ChainConfig {
   vaultWhitelist: Address[];
   reallocatorPrivateKey: Hex;
   executionInterval: number;
+  strategy: StrategyName;
 }
