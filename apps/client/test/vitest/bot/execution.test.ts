@@ -77,7 +77,7 @@ describe("should test the reallocation execution", () => {
 
     await syncTimestamp(client);
 
-    const bot = new ReallocationBot(1, client, [vault], strategy);
+    const bot = new ReallocationBot(client, [vault], strategy);
 
     await bot.run();
 
