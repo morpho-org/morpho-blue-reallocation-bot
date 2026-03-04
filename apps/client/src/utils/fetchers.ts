@@ -1,56 +1,97 @@
-import type { Address, Hex } from "viem";
+import { type Account, type Address, type Chain, type Client, type Hex, type Transport } from "viem";
+import { readContract } from "viem/actions";
+import { type MarketId } from "@morpho-org/blue-sdk";
+import { fetchMarket, fetchPosition } from "@morpho-org/blue-sdk-viem";
 
-import { apiSdk } from "../api/index.js";
-import type { VaultData, VaultMarketData } from "./types";
+import { metaMorphoAbi } from "../../abis/MetaMorpho.js";
+import { toAssetsDown } from "./maths.js";
+import type { VaultData, VaultMarketData } from "./types.js";
 
 export async function fetchVaultData(
-  chainId: number,
+  client: Client<Transport, Chain, Account>,
   vaultAddresses: Address[],
 ): Promise<VaultData[]> {
-  const { vaults } = await apiSdk.getVaultsData({ chainId, addresses: vaultAddresses });
+  const chainId = client.chain.id;
 
-  if (!vaults?.items) {
-    console.error(new Error(`No vaults found for addresses: ${vaultAddresses.join(", ")}`));
-    return [];
-  }
-
-  return vaults.items
-    .filter(
-      (vault): vault is NonNullable<typeof vault> & { state: NonNullable<typeof vault.state> } =>
-        vault !== null && vault.state !== null,
-    )
-    .map((vault) => {
-      const marketsData: VaultMarketData[] = vault.state.allocation.map((allocation) => {
-        const { market } = allocation;
-
-        return {
-          chainId,
-          id: market.uniqueKey as Hex,
-          params: {
-            loanToken: market.loanAsset.address,
-            collateralToken:
-              market.collateralAsset?.address ?? "0x0000000000000000000000000000000000000000",
-            oracle: market.oracle?.address ?? "0x0000000000000000000000000000000000000000",
-            irm: market.irmAddress,
-            lltv: BigInt(market.lltv),
-          },
-          state: {
-            totalSupplyAssets: BigInt(market.state?.supplyAssets ?? "0"),
-            totalSupplyShares: BigInt(market.state?.supplyShares ?? "0"),
-            totalBorrowAssets: BigInt(market.state?.borrowAssets ?? "0"),
-            totalBorrowShares: BigInt(market.state?.borrowShares ?? "0"),
-            lastUpdate: BigInt(market.state?.timestamp ?? "0"),
-            fee: BigInt(market.state?.fee ?? "0"),
-          },
-          cap: BigInt(allocation.supplyCap),
-          vaultAssets: BigInt(allocation.supplyAssets),
-          rateAtTarget: BigInt(market.state?.rateAtTarget ?? "0"),
-        };
+  return Promise.all(
+    vaultAddresses.map(async (vaultAddress): Promise<VaultData> => {
+      // 1. Get withdraw queue length
+      const queueLength = await readContract(client, {
+        address: vaultAddress,
+        abi: metaMorphoAbi,
+        functionName: "withdrawQueueLength",
       });
 
+      // 2. Get all market IDs from withdraw queue
+      const marketIds = await Promise.all(
+        Array.from({ length: Number(queueLength) }, (_, i) =>
+          readContract(client, {
+            address: vaultAddress,
+            abi: metaMorphoAbi,
+            functionName: "withdrawQueue",
+            args: [BigInt(i)],
+          }),
+        ),
+      );
+
+      const now = BigInt(Math.floor(Date.now() / 1000));
+
+      // 3. For each market, fetch all data in parallel using blue-sdk-viem
+      const marketsData = await Promise.all(
+        marketIds.map(async (id): Promise<VaultMarketData> => {
+          const marketId = id as MarketId;
+
+          const [market, position, config] = await Promise.all([
+            fetchMarket(marketId, client, { chainId }),
+            fetchPosition(vaultAddress, marketId, client, { chainId }),
+            readContract(client, {
+              address: vaultAddress,
+              abi: metaMorphoAbi,
+              functionName: "config",
+              args: [id],
+            }),
+          ]);
+
+          // Accrue interest to get up-to-date market state
+          const accruedMarket = market.accrueInterest(now);
+
+          const [cap] = config;
+
+          const vaultAssets = toAssetsDown(
+            position.supplyShares,
+            accruedMarket.totalSupplyAssets,
+            accruedMarket.totalSupplyShares,
+          );
+
+          return {
+            chainId,
+            id: id as Hex,
+            params: {
+              loanToken: accruedMarket.params.loanToken,
+              collateralToken: accruedMarket.params.collateralToken,
+              oracle: accruedMarket.params.oracle,
+              irm: accruedMarket.params.irm,
+              lltv: accruedMarket.params.lltv,
+            },
+            state: {
+              totalSupplyAssets: accruedMarket.totalSupplyAssets,
+              totalSupplyShares: accruedMarket.totalSupplyShares,
+              totalBorrowAssets: accruedMarket.totalBorrowAssets,
+              totalBorrowShares: accruedMarket.totalBorrowShares,
+              lastUpdate: accruedMarket.lastUpdate,
+              fee: accruedMarket.fee,
+            },
+            cap: BigInt(cap),
+            vaultAssets,
+            rateAtTarget: accruedMarket.rateAtTarget ?? 0n,
+          };
+        }),
+      );
+
       return {
-        vaultAddress: vault.address,
+        vaultAddress,
         marketsData,
       };
-    });
+    }),
+  );
 }

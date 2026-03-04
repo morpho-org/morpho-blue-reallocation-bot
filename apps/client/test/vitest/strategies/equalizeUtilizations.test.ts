@@ -3,7 +3,7 @@ import { describe, expect } from "vitest";
 import { EquilizeUtilizations } from "../../../src/strategies/equilizeUtilizations/index.js";
 import { readContract, writeContract } from "viem/actions";
 import { WBTC, MORPHO } from "../../constants.js";
-import { morphoBlueAbi } from "../../abis/MorphoBlue.js";
+import { morphoBlueAbi } from "../../../abis/MorphoBlue.js";
 import { metaMorphoAbi } from "../../../abis/MetaMorpho.js";
 import { wDivDown } from "../../../src/utils/maths.js";
 import { test } from "../../setup.js";

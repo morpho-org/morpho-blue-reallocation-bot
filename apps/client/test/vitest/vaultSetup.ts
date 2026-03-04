@@ -10,7 +10,7 @@ import {
   MIN_TIMELOCK,
 } from "../constants";
 import { getTransactionReceipt, writeContract } from "viem/actions";
-import { morphoBlueAbi } from "../abis/MorphoBlue";
+import { morphoBlueAbi } from "../../abis/MorphoBlue";
 import { metaMorphoFactoryAbi } from "../abis/MetaMorphoFactory";
 import { metaMorphoAbi } from "../../abis/MetaMorpho";
 import { vi } from "vitest";
@@ -248,13 +248,15 @@ export async function borrow(client: AnvilTestClient, borrowStructs: BorrowStruc
   }
 }
 
-const syncTimestamp = async (client: AnvilTestClient, timestamp?: bigint) => {
+export const syncTimestamp = async (client: AnvilTestClient, timestamp?: bigint) => {
   timestamp ??= (await client.timestamp()) + 60n;
 
   vi.useFakeTimers({
     now: Number(timestamp) * 1000,
     toFake: ["Date"], // Avoid faking setTimeout, used to delay retries.
   });
+
+  vi.setSystemTime(Number(timestamp) * 1000);
 
   await client.setNextBlockTimestamp({ timestamp });
 
