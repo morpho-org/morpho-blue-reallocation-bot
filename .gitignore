@@ -1,23 +1,27 @@
 # Dependencies
 **/node_modules
 
+# Build output
 **/dist
+
+# Environment
+.env
+.env*.local
+
+# Claude Code
+.claude/settings.local.json
+
+# IDE
+.vscode
+
+# OS
+.DS_Store
 
 # Ponder
 .ponder
 
-# Debug
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# Misc
-.DS_Store
-
-# Env files
-.env*.local
-.env
-
-.vscode
-.claude
