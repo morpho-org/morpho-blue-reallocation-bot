@@ -71,7 +71,10 @@ importers:
         version: link:../config
       '@morpho-org/blue-api-sdk':
         specifier: ^2.17.2
-        version: 2.17.2(@morpho-org/blue-sdk@5.9.1(@morpho-org/morpho-ts@2.4.6))(@morpho-org/morpho-ts@2.4.6)
+        version: 2.17.2(@morpho-org/blue-sdk@5.17.0(@morpho-org/morpho-ts@2.4.6))(@morpho-org/morpho-ts@2.4.6)
+      '@morpho-org/blue-sdk':
+        specifier: ^5.16.0
+        version: 5.17.0(@morpho-org/morpho-ts@2.4.6)
       '@ponder/client':
         specifier: ^0.9.27
         version: 0.9.28(@electric-sql/pglite@0.2.13)(@opentelemetry/api@1.9.0)(kysely@0.26.3)(pg@8.15.1)(typescript@5.8.3)
@@ -1137,10 +1140,10 @@ packages:
       '@morpho-org/blue-sdk': ^5.9.1
       '@morpho-org/morpho-ts': ^2.4.6
 
-  '@morpho-org/blue-sdk@5.9.1':
-    resolution: {integrity: sha512-cUuc8Gyi5mKt9EXugderkdaV3ou+BmDMqPgE2wTED2uO7uTUabGLcq/KENSAZKX1DDGWuUSRLASQzNnOwEInZQ==}
+  '@morpho-org/blue-sdk@5.17.0':
+    resolution: {integrity: sha512-KAHozeKZqk/BHy+XxQwJFsK/blYthbdbUS0kNjtObPMnYdDqSFpacWX+72Tz1G5zPJVBbyXIcaHTXNBD+W6Mtg==}
     peerDependencies:
-      '@morpho-org/morpho-ts': ^2.4.6
+      '@morpho-org/morpho-ts': ^2.5.0
 
   '@morpho-org/morpho-ts@2.4.6':
     resolution: {integrity: sha512-LWglkfjjU5xXOwNg8dog9g7+k42rBbgvx6xf1SBje8ZQOurhC+BB0yh/Jl/ArcTf/siiFeXDKievEhETZEo4jg==}
@@ -4662,12 +4665,12 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@morpho-org/blue-api-sdk@2.17.2(@morpho-org/blue-sdk@5.9.1(@morpho-org/morpho-ts@2.4.6))(@morpho-org/morpho-ts@2.4.6)':
+  '@morpho-org/blue-api-sdk@2.17.2(@morpho-org/blue-sdk@5.17.0(@morpho-org/morpho-ts@2.4.6))(@morpho-org/morpho-ts@2.4.6)':
     dependencies:
-      '@morpho-org/blue-sdk': 5.9.1(@morpho-org/morpho-ts@2.4.6)
+      '@morpho-org/blue-sdk': 5.17.0(@morpho-org/morpho-ts@2.4.6)
       '@morpho-org/morpho-ts': 2.4.6
 
-  '@morpho-org/blue-sdk@5.9.1(@morpho-org/morpho-ts@2.4.6)':
+  '@morpho-org/blue-sdk@5.17.0(@morpho-org/morpho-ts@2.4.6)':
     dependencies:
       '@morpho-org/morpho-ts': 2.4.6
       '@noble/hashes': 1.7.1
