@@ -12,6 +12,7 @@
   "dependencies": {
     "@morpho-blue-reallocation-bot/config": "workspace:*",
     "@morpho-org/blue-api-sdk": "^2.17.2",
+    "@morpho-org/blue-sdk": "^5.16.0",
     "@ponder/client": "^0.9.27",
     "graphql-request": "^7.4.0",
     "graphql-tag": "^2.12.6"
