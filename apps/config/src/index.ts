@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
 import type { Address, Chain, Hex } from "viem";
-import { chains } from "./config";
-import type { ChainConfig } from "./types";
+import { CAP_BUFFER_PERCENT, chains } from "./config";
+import type { ChainConfig, StrategyName } from "./types";
 
 dotenv.config();
 
-export function chainConfig(chain: Chain): ChainConfig {
+export function chainConfig(chain: Chain, strategy: StrategyName): ChainConfig {
   const { rpcUrl, vaultWhitelist, reallocatorPrivateKey, executionInterval } = getSecrets(chain);
   return {
     chain,
@@ -14,6 +14,7 @@ export function chainConfig(chain: Chain): ChainConfig {
     reallocatorPrivateKey,
     vaultWhitelist,
     executionInterval,
+    strategy,
   };
 }
 
@@ -46,5 +47,5 @@ export function getSecrets(chain: Chain) {
   };
 }
 
-export { type ChainConfig, chains };
+export { type ChainConfig, type StrategyName, chains, CAP_BUFFER_PERCENT };
 export * from "./strategies";

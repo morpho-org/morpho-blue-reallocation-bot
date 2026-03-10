@@ -1,19 +1,19 @@
 import type { Address, Chain, Hex } from "viem";
 
-export type ChainConfig = {
+export interface ChainConfig {
   chain: Chain;
   rpcUrl: string;
   vaultWhitelist: Address[];
   reallocatorPrivateKey: Hex;
-};
+}
 
-export type MarketParams = {
+export interface MarketParams {
   loanToken: Address;
   collateralToken: Address;
   irm: Address;
   oracle: Address;
   lltv: bigint;
-};
+}
 
 export interface MarketState {
   totalSupplyAssets: bigint;
@@ -24,7 +24,7 @@ export interface MarketState {
   fee: bigint;
 }
 
-export type VaultMarketData = {
+export interface VaultMarketData {
   chainId: number;
   id: Hex;
   params: MarketParams;
@@ -32,14 +32,14 @@ export type VaultMarketData = {
   cap: bigint;
   vaultAssets: bigint;
   rateAtTarget: bigint;
-};
+}
 
-export type VaultData = {
+export interface VaultData {
   vaultAddress: Address;
   marketsData: VaultMarketData[];
-};
+}
 
-export type MarketAllocation = {
+export interface MarketAllocation {
   marketParams: MarketParams;
   assets: bigint;
-};
+}

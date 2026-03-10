@@ -1,5 +1,12 @@
 import { AnvilTestClient, testAccount } from "@morpho-org/test";
 import { Address, maxUint184, maxUint256, parseUnits, zeroAddress } from "viem";
+import { getTransactionReceipt, writeContract } from "viem/actions";
+import { vi } from "vitest";
+
+import { metaMorphoAbi } from "../../abis/MetaMorpho";
+import { morphoBlueAbi } from "../../abis/MorphoBlue";
+import { MarketParams } from "../../src/utils/types";
+import { metaMorphoFactoryAbi } from "../abis/MetaMorphoFactory";
 import {
   USDC,
   WBTC,
@@ -9,45 +16,39 @@ import {
   METAMORPHO_FACTORY,
   MIN_TIMELOCK,
 } from "../constants";
-import { getTransactionReceipt, writeContract } from "viem/actions";
-import { morphoBlueAbi } from "../abis/MorphoBlue";
-import { metaMorphoFactoryAbi } from "../abis/MetaMorphoFactory";
-import { metaMorphoAbi } from "../../abis/MetaMorpho";
-import { vi } from "vitest";
-import { MarketParams } from "../../src/utils/types";
 
-export type BorrowStruct = {
+export interface BorrowStruct {
   marketParams: MarketParams;
   collateralAmount: bigint;
   loanAmount: bigint;
-};
+}
 
 export const marketParams1 = {
-  loanToken: USDC as Address,
-  collateralToken: WBTC as Address,
-  oracle: WBTC_USDC_ORACLE as Address,
-  irm: IRM as Address,
+  loanToken: USDC,
+  collateralToken: WBTC,
+  oracle: WBTC_USDC_ORACLE,
+  irm: IRM,
   lltv: parseUnits("0.385", 18),
 };
 
 export const marketParams2 = {
-  loanToken: USDC as Address,
-  collateralToken: WBTC as Address,
-  oracle: WBTC_USDC_ORACLE as Address,
-  irm: IRM as Address,
+  loanToken: USDC,
+  collateralToken: WBTC,
+  oracle: WBTC_USDC_ORACLE,
+  irm: IRM,
   lltv: parseUnits("0.625", 18),
 };
 
 export const marketParams3 = {
-  loanToken: USDC as Address,
-  collateralToken: WBTC as Address,
-  oracle: WBTC_USDC_ORACLE as Address,
-  irm: IRM as Address,
+  loanToken: USDC,
+  collateralToken: WBTC,
+  oracle: WBTC_USDC_ORACLE,
+  irm: IRM,
   lltv: parseUnits("0.77", 18),
 };
 
 export const idleMarketParams = {
-  loanToken: USDC as Address,
+  loanToken: USDC,
   collateralToken: zeroAddress,
   oracle: zeroAddress,
   irm: zeroAddress,
@@ -248,13 +249,15 @@ export async function borrow(client: AnvilTestClient, borrowStructs: BorrowStruc
   }
 }
 
-const syncTimestamp = async (client: AnvilTestClient, timestamp?: bigint) => {
+export const syncTimestamp = async (client: AnvilTestClient, timestamp?: bigint) => {
   timestamp ??= (await client.timestamp()) + 60n;
 
   vi.useFakeTimers({
     now: Number(timestamp) * 1000,
     toFake: ["Date"], // Avoid faking setTimeout, used to delay retries.
   });
+
+  vi.setSystemTime(Number(timestamp) * 1000);
 
   await client.setNextBlockTimestamp({ timestamp });
 

@@ -70,11 +70,15 @@ export function getWithdrawableAmount(marketData: VaultMarketData, targetUtiliza
   );
 }
 
-export function getDepositableAmount(marketData: VaultMarketData, targetUtilization: bigint) {
-  return min(
-    getDepositToUtilization(marketData.state, targetUtilization),
-    marketData.cap - marketData.vaultAssets,
-  );
+export function getDepositableAmount(
+  marketData: VaultMarketData,
+  targetUtilization: bigint,
+  capBufferPercent: number,
+) {
+  const bufferedCap = wMulDown(marketData.cap, percentToWad(capBufferPercent));
+  const remainingCap =
+    bufferedCap > marketData.vaultAssets ? bufferedCap - marketData.vaultAssets : 0n;
+  return min(getDepositToUtilization(marketData.state, targetUtilization), remainingCap);
 }
 
 // Approximation of the natural logarithm with the first three terms of the Taylor series
