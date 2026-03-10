@@ -24,6 +24,6 @@ export const launchBot = (config: ChainConfig) => {
     () => {
       void bot.run();
     },
-    config.executionInterval * 100 * 60,
+    config.executionInterval * 1000 * 60,
   );
 };
