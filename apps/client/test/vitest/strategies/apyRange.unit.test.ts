@@ -3,15 +3,7 @@ import { Address, Hex, maxUint256, parseUnits, zeroAddress } from "viem";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ApyRange } from "../../../src/strategies/apyRange/index.js";
-import {
-  apyToRate,
-  getUtilization,
-  percentToWad,
-  rateToUtilization,
-  WAD,
-  wDivDown,
-  wMulDown,
-} from "../../../src/utils/maths.js";
+import { apyToRate, percentToWad, rateToUtilization, wMulDown } from "../../../src/utils/maths.js";
 import { MarketParams, VaultData, VaultMarketData } from "../../../src/utils/types.js";
 
 // --- Test harness ---
@@ -113,7 +105,12 @@ function makeIdleMarket(vaultAssets: bigint, cap?: bigint): VaultMarketData {
   return {
     chainId: 1,
     id: makeMarketId(),
-    params: makeMarketParams({ collateralToken: zeroAddress, oracle: zeroAddress, irm: zeroAddress, lltv: 0n }),
+    params: makeMarketParams({
+      collateralToken: zeroAddress,
+      oracle: zeroAddress,
+      irm: zeroAddress,
+      lltv: 0n,
+    }),
     state: {
       totalSupplyAssets: vaultAssets,
       totalSupplyShares: vaultAssets * 1_000_000n,
@@ -239,9 +236,7 @@ describe("ApyRange unit tests", () => {
         rateAtTarget: RATE_AT_TARGET,
       });
 
-      const result = strategy.findReallocation(
-        makeVaultData([capReachedMarket, withdrawalMarket]),
-      );
+      const result = strategy.findReallocation(makeVaultData([capReachedMarket, withdrawalMarket]));
 
       // totalDepositableAmount = 0 because cap is reached → toReallocate = 0 → undefined
       expect(result).toBeUndefined();
@@ -268,9 +263,7 @@ describe("ApyRange unit tests", () => {
         rateAtTarget: RATE_AT_TARGET,
       });
 
-      const result = strategy.findReallocation(
-        makeVaultData([emptyMarket, depositMarket]),
-      );
+      const result = strategy.findReallocation(makeVaultData([emptyMarket, depositMarket]));
 
       // totalWithdrawableAmount = 0 → toReallocate = 0 → undefined
       expect(result).toBeUndefined();
@@ -340,9 +333,7 @@ describe("ApyRange unit tests", () => {
         rateAtTarget: RATE_AT_TARGET,
       });
 
-      const result = strategy.findReallocation(
-        makeVaultData([depositMarket, withdrawalMarket]),
-      );
+      const result = strategy.findReallocation(makeVaultData([depositMarket, withdrawalMarket]));
 
       expect(result).toBeDefined();
       expect(result!.length).toBe(2);
@@ -420,9 +411,7 @@ describe("ApyRange unit tests", () => {
         rateAtTarget: RATE_AT_TARGET,
       });
 
-      const result = strategy.findReallocation(
-        makeVaultData([depositMarket, withdrawalMarket]),
-      );
+      const result = strategy.findReallocation(makeVaultData([depositMarket, withdrawalMarket]));
 
       expect(result).toBeUndefined();
     });
@@ -443,15 +432,11 @@ describe("ApyRange unit tests", () => {
 
       const idleMarket = makeIdleMarket(0n);
 
-      const result = strategy.findReallocation(
-        makeVaultData([withdrawalMarket, idleMarket]),
-      );
+      const result = strategy.findReallocation(makeVaultData([withdrawalMarket, idleMarket]));
 
       expect(result).toBeDefined();
       // Should have withdrawal + idle deposit
-      const idleAlloc = result!.find(
-        (r) => r.marketParams.collateralToken === zeroAddress,
-      );
+      const idleAlloc = result!.find((r) => r.marketParams.collateralToken === zeroAddress);
       expect(idleAlloc).toBeDefined();
       expect(idleAlloc!.assets).toBe(maxUint256);
     });
@@ -470,15 +455,11 @@ describe("ApyRange unit tests", () => {
 
       const idleMarket = makeIdleMarket(parseUnits("50000", 6));
 
-      const result = strategy.findReallocation(
-        makeVaultData([depositMarket, idleMarket]),
-      );
+      const result = strategy.findReallocation(makeVaultData([depositMarket, idleMarket]));
 
       expect(result).toBeDefined();
       // Should have idle withdrawal + deposit
-      const idleAlloc = result!.find(
-        (r) => r.marketParams.collateralToken === zeroAddress,
-      );
+      const idleAlloc = result!.find((r) => r.marketParams.collateralToken === zeroAddress);
       expect(idleAlloc).toBeDefined();
       expect(idleAlloc!.assets).toBeLessThan(parseUnits("50000", 6));
     });
@@ -500,9 +481,7 @@ describe("ApyRange unit tests", () => {
 
       const idleMarket = makeIdleMarket(0n);
 
-      const result = strategy.findReallocation(
-        makeVaultData([withdrawalMarket, idleMarket]),
-      );
+      const result = strategy.findReallocation(makeVaultData([withdrawalMarket, idleMarket]));
 
       // No deposit target available (idle disabled) → no reallocation
       expect(result).toBeUndefined();
@@ -529,9 +508,7 @@ describe("ApyRange unit tests", () => {
         rateAtTarget: RATE_AT_TARGET,
       });
 
-      const result = strategy.findReallocation(
-        makeVaultData([depositMarket, withdrawalMarket]),
-      );
+      const result = strategy.findReallocation(makeVaultData([depositMarket, withdrawalMarket]));
 
       expect(result).toBeDefined();
       // Last deposit (only deposit here) should get maxUint256
