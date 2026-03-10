@@ -1,9 +1,10 @@
-import { type Account, type Address, type Chain, type Client, type Hex, type Transport } from "viem";
-import { readContract } from "viem/actions";
 import { type MarketId } from "@morpho-org/blue-sdk";
 import { fetchMarket, fetchPosition } from "@morpho-org/blue-sdk-viem";
+import { type Account, type Address, type Chain, type Client, type Transport } from "viem";
+import { readContract } from "viem/actions";
 
 import { metaMorphoAbi } from "../../abis/MetaMorpho.js";
+
 import { toAssetsDown } from "./maths.js";
 import type { VaultData, VaultMarketData } from "./types.js";
 
@@ -65,7 +66,7 @@ export async function fetchVaultData(
 
           return {
             chainId,
-            id: id as Hex,
+            id: id,
             params: {
               loanToken: accruedMarket.params.loanToken,
               collateralToken: accruedMarket.params.collateralToken,

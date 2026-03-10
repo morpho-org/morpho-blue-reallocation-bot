@@ -1,4 +1,10 @@
+import {
+  CAP_BUFFER_PERCENT,
+  DEFAULT_MIN_UTILIZATION_DELTA_BIPS,
+  vaultsMinUtilizationDeltaBips,
+} from "@morpho-blue-reallocation-bot/config";
 import { Address, maxUint256, zeroAddress } from "viem";
+
 import {
   getDepositableAmount,
   getWithdrawableAmount,
@@ -8,11 +14,6 @@ import {
 } from "../../utils/maths";
 import { MarketAllocation, VaultData } from "../../utils/types";
 import { Strategy } from "../strategy";
-import {
-  CAP_BUFFER_PERCENT,
-  DEFAULT_MIN_UTILIZATION_DELTA_BIPS,
-  vaultsMinUtilizationDeltaBips,
-} from "@morpho-blue-reallocation-bot/config";
 
 export class EquilizeUtilizations implements Strategy {
   findReallocation(vaultData: VaultData) {
@@ -35,7 +36,11 @@ export class EquilizeUtilizations implements Strategy {
     for (const marketData of marketsData) {
       const utilization = getUtilization(marketData.state);
       if (utilization > targetUtilization) {
-        totalDepositableAmount += getDepositableAmount(marketData, targetUtilization, CAP_BUFFER_PERCENT);
+        totalDepositableAmount += getDepositableAmount(
+          marketData,
+          targetUtilization,
+          CAP_BUFFER_PERCENT,
+        );
       } else {
         totalWithdrawableAmount += getWithdrawableAmount(marketData, targetUtilization);
       }
@@ -59,7 +64,10 @@ export class EquilizeUtilizations implements Strategy {
       const utilization = getUtilization(marketData.state);
 
       if (utilization > targetUtilization) {
-        const deposit = min(getDepositableAmount(marketData, targetUtilization, CAP_BUFFER_PERCENT), remainingDeposit);
+        const deposit = min(
+          getDepositableAmount(marketData, targetUtilization, CAP_BUFFER_PERCENT),
+          remainingDeposit,
+        );
         remainingDeposit -= deposit;
 
         deposits.push({

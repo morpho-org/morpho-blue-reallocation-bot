@@ -70,9 +70,14 @@ export function getWithdrawableAmount(marketData: VaultMarketData, targetUtiliza
   );
 }
 
-export function getDepositableAmount(marketData: VaultMarketData, targetUtilization: bigint, capBufferPercent: number) {
+export function getDepositableAmount(
+  marketData: VaultMarketData,
+  targetUtilization: bigint,
+  capBufferPercent: number,
+) {
   const bufferedCap = wMulDown(marketData.cap, percentToWad(capBufferPercent));
-  const remainingCap = bufferedCap > marketData.vaultAssets ? bufferedCap - marketData.vaultAssets : 0n;
+  const remainingCap =
+    bufferedCap > marketData.vaultAssets ? bufferedCap - marketData.vaultAssets : 0n;
   return min(getDepositToUtilization(marketData.state, targetUtilization), remainingCap);
 }
 

@@ -1,4 +1,5 @@
 import { chainConfig, chains } from "@morpho-blue-reallocation-bot/config";
+
 import { launchBot } from ".";
 
 async function run() {
@@ -6,7 +7,9 @@ async function run() {
 
   try {
     // biome-ignore lint/complexity/noForEach: <explanation>
-    configs.forEach((config) => launchBot(config));
+    configs.forEach((config) => {
+      launchBot(config);
+    });
   } catch (err) {
     console.error(err);
     process.exit(1);

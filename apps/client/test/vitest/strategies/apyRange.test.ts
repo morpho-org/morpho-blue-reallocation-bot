@@ -1,16 +1,17 @@
-import { describe, expect } from "vitest";
-import { Address, Hex, maxUint184, maxUint256, parseUnits } from "viem";
-import { mainnet } from "viem/chains";
-import { readContract, writeContract } from "viem/actions";
-import { test } from "../../setup.js";
-import { morphoBlueAbi } from "../../../abis/MorphoBlue.js";
-import { metaMorphoAbi } from "../../../abis/MetaMorpho.js";
-import { adaptiveCurveIrmAbi } from "../../../abis/AdaptiveCurveIrm.js";
-import { WBTC, MORPHO, IRM } from "../../constants.js";
 import { Range } from "@morpho-blue-reallocation-bot/config";
-import { rateToApy, getUtilization, percentToWad, WAD } from "../../../src/utils/maths.js";
-import { abs, formatMarketState } from "../helpers.js";
+import { Address, Hex, maxUint184, maxUint256, parseUnits } from "viem";
+import { readContract, writeContract } from "viem/actions";
+import { mainnet } from "viem/chains";
+import { describe, expect } from "vitest";
+
+import { adaptiveCurveIrmAbi } from "../../../abis/AdaptiveCurveIrm.js";
+import { metaMorphoAbi } from "../../../abis/MetaMorpho.js";
+import { morphoBlueAbi } from "../../../abis/MorphoBlue.js";
 import { ApyRange } from "../../../src/strategies/apyRange/index.js";
+import { rateToApy, getUtilization, percentToWad, WAD } from "../../../src/utils/maths.js";
+import { WBTC, MORPHO, IRM } from "../../constants.js";
+import { test } from "../../setup.js";
+import { abs, formatMarketState } from "../helpers.js";
 import {
   setupVault,
   marketParams1,
@@ -41,12 +42,12 @@ const testConfig = {
   ALLOW_IDLE_REALLOCATION: true,
 };
 
-type TestConfig = {
+interface TestConfig {
   ALLOW_IDLE_REALLOCATION: boolean;
   DEFAULT_APY_RANGE: Range;
   vaultsDefaultApyRanges: Record<number, Record<Address, Range>>;
   marketsDefaultApyRanges: Record<number, Record<Hex, Range>>;
-};
+}
 
 class MinRatesTest extends ApyRange {
   private readonly config: TestConfig;
@@ -168,7 +169,7 @@ describe("equilizeUtilizations strategy", () => {
       ]);
 
     const vaultData = {
-      vaultAddress: vault as Address,
+      vaultAddress: vault,
       marketsData: [
         {
           chainId: 1,

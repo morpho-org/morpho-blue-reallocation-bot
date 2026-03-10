@@ -1,6 +1,6 @@
 import { createViemTest } from "@morpho-org/test/vitest";
-import { mainnet } from "viem/chains";
 import dotenv from "dotenv";
+import { mainnet } from "viem/chains";
 
 dotenv.config();
 
