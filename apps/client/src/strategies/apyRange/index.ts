@@ -1,5 +1,6 @@
 import {
   ALLOW_IDLE_REALLOCATION,
+  CAP_BUFFER_PERCENT,
   DEFAULT_APY_RANGE,
   DEFAULT_MIN_APY_DELTA_BIPS,
   marketsApyRanges,
@@ -53,7 +54,11 @@ export class ApyRange implements Strategy {
       const utilization = getUtilization(marketData.state);
 
       if (utilization > upperUtilizationBound) {
-        totalDepositableAmount += getDepositableAmount(marketData, upperUtilizationBound);
+        totalDepositableAmount += getDepositableAmount(
+          marketData,
+          upperUtilizationBound,
+          CAP_BUFFER_PERCENT,
+        );
 
         const apyDelta =
           rateToApy(utilizationToRate(upperUtilizationBound, marketData.rateAtTarget)) -
@@ -119,9 +124,10 @@ export class ApyRange implements Strategy {
 
       if (utilization > upperUtilizationBound) {
         const deposit = min(
-          getDepositableAmount(marketData, upperUtilizationBound),
+          getDepositableAmount(marketData, upperUtilizationBound, CAP_BUFFER_PERCENT),
           remainingDeposit,
         );
+        if (deposit === 0n) continue;
         remainingDeposit -= deposit;
 
         deposits.push({
@@ -133,6 +139,7 @@ export class ApyRange implements Strategy {
           getWithdrawableAmount(marketData, lowerUtilizationBound),
           remainingWithdrawal,
         );
+        if (withdrawal === 0n) continue;
         remainingWithdrawal -= withdrawal;
 
         withdrawals.push({

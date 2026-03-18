@@ -14,17 +14,14 @@ import { Strategy } from "./strategies/strategy.js";
 import { fetchVaultData } from "./utils/fetchers.js";
 
 export class ReallocationBot {
-  private chainId: number;
   private client: Client<Transport, Chain, Account>;
   private vaultWhitelist: Address[];
   private strategy: Strategy;
   constructor(
-    chainId: number,
     client: Client<Transport, Chain, Account>,
     vaultWhitelist: Address[],
     strategy: Strategy,
   ) {
-    this.chainId = chainId;
     this.client = client;
     this.vaultWhitelist = vaultWhitelist;
     this.strategy = strategy;
@@ -32,7 +29,7 @@ export class ReallocationBot {
 
   async run() {
     const { client } = this;
-    const vaultsData = await fetchVaultData(this.chainId, this.vaultWhitelist);
+    const vaultsData = await fetchVaultData(this.client, this.vaultWhitelist);
 
     await Promise.all(
       vaultsData.map(async (vaultData) => {

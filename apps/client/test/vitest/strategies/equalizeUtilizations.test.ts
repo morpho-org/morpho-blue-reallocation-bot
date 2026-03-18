@@ -1,12 +1,14 @@
 import { Address, Hex, maxUint256, parseUnits } from "viem";
-import { describe, expect } from "vitest";
-import { EquilizeUtilizations } from "../../../src/strategies/equilizeUtilizations/index.js";
 import { readContract, writeContract } from "viem/actions";
-import { WBTC, MORPHO } from "../../constants.js";
-import { morphoBlueAbi } from "../../abis/MorphoBlue.js";
+import { describe, expect } from "vitest";
+
 import { metaMorphoAbi } from "../../../abis/MetaMorpho.js";
+import { morphoBlueAbi } from "../../../abis/MorphoBlue.js";
+import { EquilizeUtilizations } from "../../../src/strategies/equilizeUtilizations/index.js";
 import { wDivDown } from "../../../src/utils/maths.js";
+import { WBTC, MORPHO } from "../../constants.js";
 import { test } from "../../setup.js";
+import { abs, formatMarketState } from "../helpers.js";
 import {
   setupVault,
   marketParams1,
@@ -18,7 +20,6 @@ import {
   prepareBorrow,
   borrow,
 } from "../vaultSetup.js";
-import { abs, formatMarketState } from "../helpers.js";
 
 describe("equilizeUtilizations strategy", () => {
   const strategy = new EquilizeUtilizations();
@@ -93,7 +94,7 @@ describe("equilizeUtilizations strategy", () => {
     ]);
 
     const vaultData = {
-      vaultAddress: vault as Address,
+      vaultAddress: vault,
       marketsData: [
         {
           chainId: 1,

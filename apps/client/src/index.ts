@@ -3,7 +3,7 @@ import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
 import { ReallocationBot } from "./bot";
-import { EquilizeUtilizations } from "./strategies";
+import { createStrategy } from "./strategies";
 
 export const launchBot = (config: ChainConfig) => {
   const client = createWalletClient({
@@ -12,18 +12,18 @@ export const launchBot = (config: ChainConfig) => {
     account: privateKeyToAccount(config.reallocatorPrivateKey),
   });
 
-  const bot = new ReallocationBot(
-    config.chainId,
-    client,
-    config.vaultWhitelist,
-    new EquilizeUtilizations(),
-  );
+  const bot = new ReallocationBot(client, config.vaultWhitelist, createStrategy(config.strategy));
 
   // Run on startup.
   void bot.run();
 
-  // Thereafter, run every `executionInterval` seconds.
-  setInterval(() => {
-    void bot.run();
-  }, config.executionInterval * 1000);
+  console.log("Bot running on", config.chain.name);
+
+  // Thereafter, run every `executionInterval` minutes.
+  setInterval(
+    () => {
+      void bot.run();
+    },
+    config.executionInterval * 1000 * 60,
+  );
 };

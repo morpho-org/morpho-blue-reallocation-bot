@@ -1,16 +1,17 @@
-import { describe, expect } from "vitest";
-import { Address, Hex, maxUint184, maxUint256, parseUnits } from "viem";
-import { mainnet } from "viem/chains";
-import { readContract, writeContract } from "viem/actions";
-import { test } from "../../setup.js";
-import { morphoBlueAbi } from "../../abis/MorphoBlue.js";
-import { metaMorphoAbi } from "../../../abis/MetaMorpho.js";
-import { adaptiveCurveIrmAbi } from "../../abis/AdaptiveCurveIrm.js";
-import { WBTC, MORPHO, IRM } from "../../constants.js";
 import { Range } from "@morpho-blue-reallocation-bot/config";
-import { rateToApy, getUtilization, percentToWad, WAD } from "../../../src/utils/maths.js";
-import { abs, formatMarketState } from "../helpers.js";
+import { Address, Hex, maxUint184, maxUint256, parseUnits } from "viem";
+import { readContract, writeContract } from "viem/actions";
+import { mainnet } from "viem/chains";
+import { describe, expect } from "vitest";
+
+import { adaptiveCurveIrmAbi } from "../../../abis/AdaptiveCurveIrm.js";
+import { metaMorphoAbi } from "../../../abis/MetaMorpho.js";
+import { morphoBlueAbi } from "../../../abis/MorphoBlue.js";
 import { ApyRange } from "../../../src/strategies/apyRange/index.js";
+import { rateToApy, getUtilization, percentToWad, WAD } from "../../../src/utils/maths.js";
+import { WBTC, MORPHO, IRM } from "../../constants.js";
+import { test } from "../../setup.js";
+import { abs, formatMarketState } from "../helpers.js";
 import {
   setupVault,
   marketParams1,
@@ -41,12 +42,12 @@ const testConfig = {
   ALLOW_IDLE_REALLOCATION: true,
 };
 
-type TestConfig = {
+interface TestConfig {
   ALLOW_IDLE_REALLOCATION: boolean;
   DEFAULT_APY_RANGE: Range;
   vaultsDefaultApyRanges: Record<number, Record<Address, Range>>;
   marketsDefaultApyRanges: Record<number, Record<Hex, Range>>;
-};
+}
 
 class MinRatesTest extends ApyRange {
   private readonly config: TestConfig;
@@ -168,7 +169,7 @@ describe("equilizeUtilizations strategy", () => {
       ]);
 
     const vaultData = {
-      vaultAddress: vault as Address,
+      vaultAddress: vault,
       marketsData: [
         {
           chainId: 1,
@@ -243,18 +244,28 @@ describe("equilizeUtilizations strategy", () => {
       }),
     ]);
 
+    const toMarketStruct = (s: readonly [bigint, bigint, bigint, bigint, bigint, bigint]) =>
+      ({
+        totalSupplyAssets: s[0],
+        totalSupplyShares: s[1],
+        totalBorrowAssets: s[2],
+        totalBorrowShares: s[3],
+        lastUpdate: s[4],
+        fee: s[5],
+      }) as const;
+
     const [marketState1Rate, marketState2Rate] = await Promise.all([
       readContract(client, {
         address: IRM,
         abi: adaptiveCurveIrmAbi,
         functionName: "borrowRateView",
-        args: [marketParams1, formatMarketState(marketState1PostReallocation)],
+        args: [marketParams1, toMarketStruct(marketState1PostReallocation)],
       }),
       readContract(client, {
         address: IRM,
         abi: adaptiveCurveIrmAbi,
         functionName: "borrowRateView",
-        args: [marketParams2, formatMarketState(marketState2PostReallocation)],
+        args: [marketParams2, toMarketStruct(marketState2PostReallocation)],
       }),
     ]);
 
